@@ -63,37 +63,9 @@ done
 
 Test an archive before extraction with `7z t path/to/archive.zip`. If a split part is absent or damaged, download that part again before continuing.
 
-### B-Free viral images
 
-Clone the official repository, install the notebook dependencies, and open its downloader:
 
-```bash
-mkdir -p third_party
-git clone https://github.com/grip-unina/B-Free.git third_party/B-Free
-python -m pip install jupyter requests requests-html tqdm
-
-mkdir -p datasets/external/bfree_viral
-cd third_party/B-Free/viral_images_dataset
-jupyter lab download.ipynb
 ```
-
-In `download.ipynb`, set `root` to the absolute path of `datasets/external/bfree_viral/` before running all cells. The notebook reads `BFree_viral_images.csv`, preserves the `REAL/` and `FAKE/` hierarchy, and validates downloaded files against the supplied MD5 values. Some historical web URLs may no longer be available; keep only files that pass the checksum check.
-
-### Expected data layout
-
-```text
-datasets/
-├── raw/
-│   └── genimage/                 # downloaded split archives
-├── processed/
-│   └── genimage/                 # extracted generator directories
-├── external/
-│   └── bfree_viral/
-│       ├── REAL/
-│       └── FAKE/
-└── manifests/                    # prepared CSV manifests
-```
-
 The prepared manifests contain a `physical_output_path` column. Ensure every value points to the corresponding extracted image on the current machine. Place the manifests, prediction caches, experiment configuration, and required artifacts in the relative locations expected by the scripts. Each executable also supports `--help` where command-line options are available.
 
 ## Detector code and checkpoints
