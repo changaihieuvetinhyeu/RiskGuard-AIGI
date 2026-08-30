@@ -19,6 +19,100 @@ python -m pip install numpy pandas scipy scikit-learn pyyaml pillow pyarrow matp
 export PYTHONPATH="$PWD/src"
 ```
 
+## Dataset download
+
+The experiments use [GenImage](https://github.com/GenImage-Dataset/GenImage) as the main image corpus and the [B-Free viral-image dataset](https://github.com/grip-unina/B-Free/tree/main/viral_images_dataset) as an external evaluation set. Review each source's license and terms before downloading or redistributing its files.
+
+### GenImage
+
+The official GenImage archives are hosted in this [Google Drive folder](https://drive.google.com/drive/folders/1jGt10bwTbhEZuGXLyvrCuxOI0cBqQ1FS?usp=sharing). The archive set is approximately 660 GB before extraction, so allow substantially more free space for the extracted images.
+
+For a browser download, open the folder link and download every generator directory. For a resumable command-line download, install `rclone`, configure a Google Drive remote named `gdrive`, and run:
+
+```bash
+mkdir -p datasets/raw/genimage
+rclone config
+
+export GENIMAGE_FOLDER_ID="1jGt10bwTbhEZuGXLyvrCuxOI0cBqQ1FS"
+rclone copy gdrive: datasets/raw/genimage \
+  --drive-root-folder-id "$GENIMAGE_FOLDER_ID" \
+  --progress \
+  --transfers 4 \
+  --checkers 8
+
+rclone check gdrive: datasets/raw/genimage \
+  --drive-root-folder-id "$GENIMAGE_FOLDER_ID" \
+  --one-way
+```
+
+Keep each `.zip` file beside all of its `.z01`, `.z02`, and later split parts. On Ubuntu, install `7zip` support and extract every archive into a generator-specific directory:
+
+```bash
+sudo apt-get update
+sudo apt-get install -y p7zip-full
+
+mkdir -p datasets/processed/genimage
+find datasets/raw/genimage -type f -name '*.zip' -print0 |
+while IFS= read -r -d '' archive; do
+  generator="$(basename "$(dirname "$archive")")"
+  output="datasets/processed/genimage/$generator"
+  mkdir -p "$output"
+  7z x "$archive" "-o$output"
+done
+```
+
+Test an archive before extraction with `7z t path/to/archive.zip`. If a split part is absent or damaged, download that part again before continuing.
+
+### B-Free viral images
+
+Clone the official repository, install the notebook dependencies, and open its downloader:
+
+```bash
+mkdir -p third_party
+git clone https://github.com/grip-unina/B-Free.git third_party/B-Free
+python -m pip install jupyter requests requests-html tqdm
+
+mkdir -p datasets/external/bfree_viral
+cd third_party/B-Free/viral_images_dataset
+jupyter lab download.ipynb
+```
+
+In `download.ipynb`, set `root` to the absolute path of `datasets/external/bfree_viral/` before running all cells. The notebook reads `BFree_viral_images.csv`, preserves the `REAL/` and `FAKE/` hierarchy, and validates downloaded files against the supplied MD5 values. Some historical web URLs may no longer be available; keep only files that pass the checksum check.
+
+### Expected data layout
+
+```text
+datasets/
+├── raw/
+│   └── genimage/                 # downloaded split archives
+├── processed/
+│   └── genimage/                 # extracted generator directories
+├── external/
+│   └── bfree_viral/
+│       ├── REAL/
+│       └── FAKE/
+└── manifests/                    # prepared CSV manifests
+```
+
+The prepared manifests contain a `physical_output_path` column. Ensure every value points to the corresponding extracted image on the current machine. Place the manifests, prediction caches, experiment configuration, and required artifacts in the relative locations expected by the scripts. Each executable also supports `--help` where command-line options are available.
+
+## Detector code and checkpoints
+
+The adapters expect the official repositories at these locations:
+
+```bash
+mkdir -p third_party
+git clone https://github.com/Ouxiang-Li/SAFE.git third_party/SAFE
+git clone https://github.com/WisconsinAIVision/UniversalFakeDetect.git third_party/UniversalFakeDetect
+```
+
+Confirm that these checkpoint files exist before inference:
+
+```text
+third_party/SAFE/checkpoint/checkpoint-best.pth
+third_party/UniversalFakeDetect/pretrained_weights/fc_weights.pth
+```
+
 ## Verify the installation
 
 ```bash
