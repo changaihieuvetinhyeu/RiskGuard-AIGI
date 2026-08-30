@@ -19,8 +19,6 @@ python -m pip install numpy pandas scipy scikit-learn pyyaml pillow pyarrow matp
 export PYTHONPATH="$PWD/src"
 ```
 
-The repository contains code only. Restore the companion inputs, checkpoints, and configuration before running the full workflow. Each executable also supports `--help` where command-line options are available.
-
 ## Verify the installation
 
 ```bash
