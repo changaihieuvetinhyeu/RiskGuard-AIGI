@@ -19,6 +19,20 @@ python -m pip install numpy pandas scipy scikit-learn pyyaml pillow pyarrow matp
 export PYTHONPATH="$PWD/src"
 ```
 
+## Prepare source data
+
+```bash
+PYTHONPATH=src python scripts/summarize_archive_inventory.py logs/genimage_drive_inventory.json
+PYTHONPATH=src python scripts/inspect_remote_archive_sizes.py
+PYTHONPATH=src python scripts/resolve_duplicate_archive_paths.py
+PYTHONPATH=src python scripts/estimate_archive_storage.py
+PYTHONPATH=src python scripts/plan_multi_disk_archive_layout.py
+bash scripts/download_archives_to_multiple_disks.sh
+PYTHONPATH=src python scripts/verify_archive_downloads.py
+PYTHONPATH=src python scripts/inspect_image_integrity.py --root datasets/processed/genimage
+PYTHONPATH=src python scripts/check_detector_dependencies.py
+```
+
 ## Dataset download
 
 The experiments use [GenImage](https://github.com/GenImage-Dataset/GenImage) as the main image corpus and the [B-Free viral-image dataset](https://github.com/grip-unina/B-Free/tree/main/viral_images_dataset) as an external evaluation set. Review each source's license and terms before downloading or redistributing its files.
